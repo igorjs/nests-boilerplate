@@ -1,0 +1,63 @@
+version: '3.8'
+
+name: nestjs-boilerplate
+
+# For connection urls to the following instances, see
+# https://github.com/prisma/prisma/blob/main/TESTING.md#environment-variables
+services:
+  webservice:
+    container_name: webservice
+    image: node:20
+    restart: unless-stopped
+    working_dir: /work
+    command: ['npm', 'run', 'start:docker']
+    environment:
+      - DATABASE_URL=postgresql://dbuser:password@postgres:5432/nestjs_api?schema=public
+    volumes:
+      - ./:/work
+    networks:
+      - dockernet
+    ports:
+      - 3001:3000
+    healthcheck:
+      test: ['CMD', 'curl', '-sSf', 'http://0.0.0.0:3000', '>', '/dev/null']
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    links:
+      - postgres
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: postgres
+    image: postgres:16
+    restart: unless-stopped
+    command: ['postgres', '-c', 'log_statement=all']
+    environment:
+      - POSTGRES_DB=nestjs_api
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=password
+    volumes:
+      # In this example, we share the folder `db-data` in our root repository, with the default PostgreSQL data path
+      # It means that every time the repository is modifying the data inside
+      # of `/var/lib/postgresql/data/`, automatically the change will appear in `db-data`
+      # You don't need to create the `db-data` folder. Docker Compose will do it for you
+      - db-data:/var/lib/postgresql/data/
+    networks:
+      - dockernet
+    ports:
+      - '15432:5432'
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'dbuser', '-d', 'nestjs_api']
+      interval: 5s
+      timeout: 2s
+      retries: 20
+
+networks:
+  dockernet:
+    driver: bridge
+
+volumes:
+  db-data:
+    driver: local

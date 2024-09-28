@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["metrics"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Schedule {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  accountId Int      @map("account_id")
+  agentId   Int      @map("agent_id")
+  startTime DateTime @map("start_time")
+  endTime   DateTime @map("end_time")
+  tasks     Task[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([accountId, agentId])
+  @@index([accountId])
+  @@index([agentId])
+  @@index([startTime, endTime])
+  @@map("schedules")
+}
+
+model Task {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  accountId  Int      @map("account_id")
+  scheduleId String   @map("schedule_id") @db.Uuid
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  startTime  DateTime @map("start_time")
+  duration   Int      @map("duration")
+  type       TaskType @map("type")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([accountId, scheduleId])
+  @@index([accountId])
+  @@index([type])
+  @@index([startTime, duration])
+  @@map("tasks")
+}
+
+enum TaskType {
+  BREAK @map("break")
+  WORK  @map("work")
+}

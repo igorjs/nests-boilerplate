@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "prisma.prisma"
+  ]
+}
