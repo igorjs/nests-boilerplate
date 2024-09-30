@@ -5,7 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
-import { FastifyRequest } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 
 const getStatusCode = <T>(exception: T): number => {
   return exception instanceof HttpException
@@ -13,7 +13,7 @@ const getStatusCode = <T>(exception: T): number => {
     : HttpStatus.INTERNAL_SERVER_ERROR;
 };
 
-const getErrorMessage = <T>(exception: T): any => {
+const getErrorMessage = <T>(exception: T) => {
   if (exception instanceof HttpException) {
     return exception['response']['message'] || exception.message;
   } else {
@@ -26,7 +26,7 @@ export class GlobalExceptionFilter<T> extends BaseExceptionFilter {
   catch(exception: T, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<FastifyRequest>();
-    const response = ctx.getResponse();
+    const response = ctx.getResponse<FastifyReply>();
 
     const statusCode = getStatusCode<T>(exception);
     const message = getErrorMessage<T>(exception);
